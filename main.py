@@ -1,40 +1,43 @@
-from langchain_core.messages import BaseMessage
 from graph import app
 
 
-def run_checkpoint_memory_demo():
-    print("=== Phase 3: Short-Term Memory (Checkpointer) Workflow ===")
+def invoke_with_checkpoint_tracing(user_input: str, thread_id: str):
+    config = {"configurable": {"thread_id": thread_id}}
 
-    # Thread configurations for short-term memory isolation
-    config_thread_1 = {"configurable": {"thread_id": "thread-1"}}
-    config_thread_2 = {"configurable": {"thread_id": "thread-2"}}
+    print(f"\n=======================================================")
+    print(f">> CALL: checkpointer.invoke(user_input='{user_input}', thread_id='{thread_id}')")
+    print(f"=======================================================")
 
-    print("\n--- Executing Thread 1 (Turn 1) ---")
-    res1 = app.invoke({"user_input": "Hello from Thread 1!"}, config=config_thread_1)
-    print(f"Response: {res1['agent_response']}")
+    # STAGE 1: Load State from Checkpointer Memory
+    state_before = app.get_state(config)
+    prior_messages = state_before.values.get("messages", [])
+    print(f"  [1. Load State] Loaded {len(prior_messages)} prior messages from thread '{thread_id}'.")
 
-    print("\n--- Executing Thread 1 (Turn 2) ---")
-    res2 = app.invoke({"user_input": "Remember my key code is 9982."}, config=config_thread_1)
-    print(f"Response: {res2['agent_response']}")
+    # STAGE 2: Execute Graph (triggers nodes)
+    output_state = app.invoke({"user_input": user_input}, config=config)
 
-    print("\n--- Executing Thread 2 (Turn 1 - Isolated Memory) ---")
-    res3 = app.invoke({"user_input": "Hello from Thread 2!"}, config=config_thread_2)
-    print(f"Response: {res3['agent_response']}")
+    # STAGE 3: Save Checkpoint to Thread Memory
+    state_after = app.get_state(config)
+    saved_messages = state_after.values.get("messages", [])
+    print(f"  [3. Save Checkpoint] Saved state to thread '{thread_id}' (Total messages: {len(saved_messages)}).")
+    print(f"  [Output Response]: '{output_state['agent_response']}'")
 
-    # Retrieve short-term checkpoint state for Thread 1
-    state_t1 = app.get_state(config_thread_1)
-    print("\n=== Retrieved Memory for [thread-1] ===")
-    for msg in state_t1.values.get("messages", []):
-        role = msg.type.upper() if isinstance(msg, BaseMessage) else "UNKNOWN"
-        print(f"[{role}]: {msg.content}")
+    return output_state
 
-    # Retrieve short-term checkpoint state for Thread 2
-    state_t2 = app.get_state(config_thread_2)
-    print("\n=== Retrieved Memory for [thread-2] ===")
-    for msg in state_t2.values.get("messages", []):
-        role = msg.type.upper() if isinstance(msg, BaseMessage) else "UNKNOWN"
-        print(f"[{role}]: {msg.content}")
+
+def main():
+    print("=== Checkpointer invoke() Lifecycle Demonstration ===")
+    print("Lifecycle Sequence: invoke() -> Load State -> Execute Graph -> Save Checkpoint\n")
+
+    # Call 1: Thread 1 First Turn
+    invoke_with_checkpoint_tracing("Hello, start session!", thread_id="session-101")
+
+    # Call 2: Thread 1 Second Turn (demonstrates loading state, executing graph, saving new checkpoint)
+    invoke_with_checkpoint_tracing("Remember my preference: Dark Mode.", thread_id="session-101")
+
+    # Call 3: Thread 2 First Turn (demonstrates separate thread state loading)
+    invoke_with_checkpoint_tracing("Hello from separate session!", thread_id="session-202")
 
 
 if __name__ == "__main__":
-    run_checkpoint_memory_demo()
+    main()
