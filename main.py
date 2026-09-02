@@ -28,19 +28,17 @@ def invoke_with_checkpoint_tracing(user_input: str, thread_id: str):
 
 
 def main():
-    print("=== Supervisor Multi-Agent Workflow Demonstration ===")
-    print("Lifecycle Sequence: invoke() -> Load State -> Supervisor Node -> Worker Node -> Supervisor Node -> Save Checkpoint\n")
+    print("=== Fan-Out / Fan-In Parallel Multi-Agent Workflow Demonstration ===")
+    print("Lifecycle Sequence: START -> Supervisor -> (Fan-Out) -> [Research, Planner, Coder] -> (Fan-In) -> Aggregator -> END\n")
 
-    # Call 1: Research Agent
-    invoke_with_checkpoint_tracing("Research the benefits of RAG", thread_id="session-101")
-
-    # Call 2: Planner Agent
-    invoke_with_checkpoint_tracing("Create a plan to build a chatbot", thread_id="session-102")
-
-    # Call 3: Coding Agent
-    invoke_with_checkpoint_tracing("Write Python code for a calculator", thread_id="session-103")
+    # Run Fan-Out / Fan-In workflow on a composite task
+    invoke_with_checkpoint_tracing(
+        "Design and implement a RAG-powered chatbot in Python",
+        thread_id="session-fanin-101"
+    )
 
 
 if __name__ == "__main__":
     main()
+
 

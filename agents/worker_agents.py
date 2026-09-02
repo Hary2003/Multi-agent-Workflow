@@ -4,30 +4,30 @@ from state import AgentState
 
 def researcher_node(state: AgentState) -> dict:
     """
-    Researcher Worker Node: Performs research tasks and responds back to the supervisor.
+    Researcher Worker Node: Performs research tasks.
     """
     user_input = state.get("user_input", "")
     print(f"  [Researcher Worker] Executing research logic for input: '{user_input}'")
 
-    response = f"[Researcher] Completed research analysis for topic: '{user_input}'."
+    response = f"[Researcher] Completed comprehensive research on: '{user_input}'."
     
     return {
-        "agent_response": response,
+        "research_output": response,
         "messages": [AIMessage(content=response)],
     }
 
 
 def coder_node(state: AgentState) -> dict:
     """
-    Coder Worker Node: Writes code or performs software engineering tasks and responds back to the supervisor.
+    Coder Worker Node: Writes code or performs software engineering tasks.
     """
     user_input = state.get("user_input", "")
     print(f"  [Coder Worker] Executing code generation logic for input: '{user_input}'")
 
-    response = f"[Coder] Generated solution implementation for task: '{user_input}'."
+    response = f"[Coder] Generated production-ready implementation for task: '{user_input}'."
 
     return {
-        "agent_response": response,
+        "coder_output": response,
         "messages": [AIMessage(content=response)],
     }
 
@@ -39,10 +39,12 @@ def planner_node(state: AgentState) -> dict:
     user_input = state.get("user_input", "")
     print(f"  [Planner Worker] Executing planning logic for input: '{user_input}'")
 
-    response = f"[Planner] Created structured plan and roadmap for task: '{user_input}'."
+    response = f"[Planner] Formulated detailed architecture and step-by-step roadmap for: '{user_input}'."
 
     return {
-        "agent_response": response,
+        "planner_output": response,
         "messages": [AIMessage(content=response)],
     }
+
+
 

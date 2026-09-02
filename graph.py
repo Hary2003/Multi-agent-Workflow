@@ -3,51 +3,38 @@ from langgraph.graph import StateGraph, START, END
 from state import AgentState
 from agents.supervisor import supervisor_node
 from agents.worker_agents import researcher_node, planner_node, coder_node
-
-
-def route_supervisor(state: AgentState) -> str:
-    """
-    Conditional edge router that checks the supervisor's decision in state.
-    """
-    next_agent = state.get("next_agent", "FINISH")
-    if next_agent == "FINISH":
-        return END
-    return next_agent
+from agents.fan_in import fan_in_node
 
 
 def create_graph():
     """
-    Constructs and compiles the multi-agent workflow graph with a supervisor node:
-    START -> supervisor -> conditional_edge -> (researcher / planner / coder) -> supervisor -> END
+    Constructs and compiles the parallel multi-agent workflow graph:
+    START -> supervisor -> (Fan-Out) -> [researcher, planner, coder] -> (Fan-In) -> fan_in -> END
     """
     workflow = StateGraph(AgentState)
     
-    # Add supervisor and worker nodes to graph
+    # Add supervisor, worker nodes, and fan_in aggregator node to graph
     workflow.add_node("supervisor", supervisor_node)
     workflow.add_node("researcher", researcher_node)
     workflow.add_node("planner", planner_node)
     workflow.add_node("coder", coder_node)
+    workflow.add_node("fan_in", fan_in_node)
     
     # Execution starts at supervisor node
     workflow.add_edge(START, "supervisor")
     
-    # Conditional routing from supervisor to worker agents or END
-    workflow.add_conditional_edges(
-        "supervisor",
-        route_supervisor,
-        {
-            "researcher": "researcher",
-            "planner": "planner",
-            "coder": "coder",
-            END: END,
-        }
-    )
+    # Fan-Out: Supervisor triggers researcher, planner, and coder in parallel branches
+    workflow.add_edge("supervisor", "researcher")
+    workflow.add_edge("supervisor", "planner")
+    workflow.add_edge("supervisor", "coder")
     
-    # Worker nodes return execution back to supervisor
-    workflow.add_edge("researcher", "supervisor")
-    workflow.add_edge("planner", "supervisor")
-    workflow.add_edge("coder", "supervisor")
-
+    # Fan-In: All three worker nodes feed into the fan_in aggregator node
+    workflow.add_edge("researcher", "fan_in")
+    workflow.add_edge("planner", "fan_in")
+    workflow.add_edge("coder", "fan_in")
+    
+    # Fan-In aggregator completes the graph workflow
+    workflow.add_edge("fan_in", END)
     
     # Enable short-term memory via in-memory checkpointer
     checkpointer = MemorySaver()
@@ -57,3 +44,4 @@ def create_graph():
 
 # Export compiled graph application instance with memory checkpointer
 app = create_graph()
+
