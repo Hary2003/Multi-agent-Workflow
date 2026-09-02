@@ -2,7 +2,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph, START, END
 from state import AgentState
 from agents.supervisor import supervisor_node
-from agents.worker_agents import researcher_node, coder_node
+from agents.worker_agents import researcher_node, planner_node, coder_node
 
 
 def route_supervisor(state: AgentState) -> str:
@@ -18,13 +18,14 @@ def route_supervisor(state: AgentState) -> str:
 def create_graph():
     """
     Constructs and compiles the multi-agent workflow graph with a supervisor node:
-    START -> supervisor -> conditional_edge -> (researcher / coder) -> supervisor -> END
+    START -> supervisor -> conditional_edge -> (researcher / planner / coder) -> supervisor -> END
     """
     workflow = StateGraph(AgentState)
     
     # Add supervisor and worker nodes to graph
     workflow.add_node("supervisor", supervisor_node)
     workflow.add_node("researcher", researcher_node)
+    workflow.add_node("planner", planner_node)
     workflow.add_node("coder", coder_node)
     
     # Execution starts at supervisor node
@@ -36,6 +37,7 @@ def create_graph():
         route_supervisor,
         {
             "researcher": "researcher",
+            "planner": "planner",
             "coder": "coder",
             END: END,
         }
@@ -43,7 +45,9 @@ def create_graph():
     
     # Worker nodes return execution back to supervisor
     workflow.add_edge("researcher", "supervisor")
+    workflow.add_edge("planner", "supervisor")
     workflow.add_edge("coder", "supervisor")
+
     
     # Enable short-term memory via in-memory checkpointer
     checkpointer = MemorySaver()

@@ -30,3 +30,19 @@ def coder_node(state: AgentState) -> dict:
         "agent_response": response,
         "messages": [AIMessage(content=response)],
     }
+
+
+def planner_node(state: AgentState) -> dict:
+    """
+    Planner Worker Node: Formulates plans, architecture, and step-by-step strategies.
+    """
+    user_input = state.get("user_input", "")
+    print(f"  [Planner Worker] Executing planning logic for input: '{user_input}'")
+
+    response = f"[Planner] Created structured plan and roadmap for task: '{user_input}'."
+
+    return {
+        "agent_response": response,
+        "messages": [AIMessage(content=response)],
+    }
+

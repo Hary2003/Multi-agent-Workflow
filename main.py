@@ -31,15 +31,16 @@ def main():
     print("=== Supervisor Multi-Agent Workflow Demonstration ===")
     print("Lifecycle Sequence: invoke() -> Load State -> Supervisor Node -> Worker Node -> Supervisor Node -> Save Checkpoint\n")
 
-    # Call 1: Research task (Thread session-101)
-    invoke_with_checkpoint_tracing("Please research quantum computing breakthroughs.", thread_id="session-101")
+    # Call 1: Research Agent
+    invoke_with_checkpoint_tracing("Research the benefits of RAG", thread_id="session-101")
 
-    # Call 2: Coding task (Thread session-101)
-    invoke_with_checkpoint_tracing("Write a Python script to sort a binary tree.", thread_id="session-101")
+    # Call 2: Planner Agent
+    invoke_with_checkpoint_tracing("Create a plan to build a chatbot", thread_id="session-102")
 
-    # Call 3: Finish/Exit task (Thread session-202)
-    invoke_with_checkpoint_tracing("We are all done with session 202, please finish.", thread_id="session-202")
+    # Call 3: Coding Agent
+    invoke_with_checkpoint_tracing("Write Python code for a calculator", thread_id="session-103")
 
 
 if __name__ == "__main__":
     main()
+
