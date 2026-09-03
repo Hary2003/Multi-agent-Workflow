@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent Graph Orchestrator | Persistent Workflow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Header Navigation -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-icon">⚡</div>
+                <div>
+                    <h1>Multi-Agent Workflow Studio</h1>
+                    <p class="subtitle">LangGraph Hierarchical Parallel Orchestration & Reflection</p>
+                </div>
+            </div>
+            <div class="header-badges">
+                <span class="badge badge-success"><span class="pulse-dot"></span> System Ready</span>
+                <span class="badge badge-purple">Gemini 3.6 Flash Engine</span>
+                <span class="badge badge-info">LangGraph v0.2</span>
+            </div>
+        </header>
+
+        <!-- Main Grid Layout -->
+        <main class="dashboard-grid">
+            <!-- Left Panel: Launcher & Controls -->
+            <section class="panel launcher-panel">
+                <div class="panel-header">
+                    <h2>🚀 Task Launcher</h2>
+                    <span class="panel-tag">Interactive Input</span>
+                </div>
+                
+                <form id="workflow-form">
+                    <div class="form-group">
+                        <label for="prompt-input">Task Prompt</label>
+                        <textarea id="prompt-input" placeholder="Enter your task description..." rows="4">Design and implement a RAG-powered chatbot in Python</textarea>
+                    </div>
+
+                    <div class="form-group row-group">
+                        <div class="flex-1">
+                            <label for="thread-input">Session Thread ID</label>
+                            <input type="text" id="thread-input" value="session-ui-101" placeholder="thread-id">
+                        </div>
+                        <button type="submit" id="run-btn" class="btn btn-primary">
+                            <span>Execute Graph</span>
+                            <span class="spinner hidden" id="btn-spinner"></span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="presets-container">
+                    <label>Quick Templates</label>
+                    <div class="preset-pills">
+                        <button class="pill-btn" onclick="loadPreset('Design and implement a RAG-powered chatbot in Python')">🤖 RAG Chatbot</button>
+                        <button class="pill-btn" onclick="loadPreset('Build an async event-driven microservice in Python with FastAPI')">⚡ Async Microservice</button>
+                        <button class="pill-btn" onclick="loadPreset('Create an automated data ETL pipeline for real-time analytics')">📊 ETL Pipeline</button>
+                    </div>
+                </div>
+
+                <!-- Execution Metrics Card -->
+                <div class="metrics-card card-glass hidden" id="metrics-card">
+                    <div class="metric-item">
+                        <span class="metric-label">Status</span>
+                        <span class="metric-value text-success" id="m-status">Completed</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Iterations</span>
+                        <span class="metric-value" id="m-iterations">2 / 2</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Quality Score</span>
+                        <span class="metric-value text-accent" id="m-score">95%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Eval Decision</span>
+                        <span class="metric-value text-gold" id="m-decision">Approved</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Visual Architecture Graph -->
+            <section class="panel graph-panel">
+                <div class="panel-header">
+                    <h2>🕸️ Live Architecture Visualizer</h2>
+                    <span class="panel-tag">Real-time Node Telemetry</span>
+                </div>
+
+                <div class="graph-visualizer" id="graph-visualizer">
+                    <div class="node node-start" id="node-START">START</div>
+                    <div class="connector-line">↓</div>
+
+                    <div class="node node-supervisor" id="node-supervisor">
+                        <span class="node-icon">🧠</span>
+                        <span class="node-title">SUPERVISOR</span>
+                    </div>
+                    
+                    <div class="fanout-bracket">
+                        <span class="bracket-title">PARALLEL FAN-OUT SUBGRAPHS</span>
+                        <div class="subgraphs-container">
+                            <div class="subgraph-box" id="node-research_subgraph">
+                                <div class="sg-header">🔬 RESEARCH SUBGRAPH</div>
+                                <div class="sg-steps">
+                                    <span class="sg-step">1. Research</span>
+                                    <span class="sg-arrow">➔</span>
+                                    <span class="sg-step">2. Analyze</span>
+                                    <span class="sg-arrow">➔</span>
+                                    <span class="sg-step">3. Summarize</span>
+                                </div>
+                            </div>
+
+                            <div class="subgraph-box" id="node-planner_subgraph">
+                                <div class="sg-header">📐 PLANNER SUBGRAPH</div>
+                                <div class="sg-steps">
+                                    <span class="sg-step">1. Understand</span>
+                                    <span class="sg-arrow">➔</span>
+                                    <span class="sg-step">2. Break down</span>
+                                    <span class="sg-arrow">➔</span>
+                                    <span class="sg-step">3. Create plan</span>
+                                </div>
+                            </div>
+
+                            <div class="subgraph-box" id="node-coder_subgraph">
+                                <div class="sg-header">💻 CODER SUBGRAPH</div>
+                                <div class="sg-steps">
+                                    <span class="sg-step">1. Generate</span>
+                                    <span class="sg-arrow">➔</span>
+                                    <span class="sg-step">2. Review</span>
+                                    <span class="sg-arrow">➔</span>
+                                    <span class="sg-step">3. Improve</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="connector-line">↓</div>
+
+                    <div class="node node-fanin" id="node-fan_in">
+                        <span class="node-icon">🔄</span>
+                        <span class="node-title">FAN-IN AGGREGATOR</span>
+                    </div>
+
+                    <div class="connector-line">↓</div>
+
+                    <div class="eval-loop-wrapper">
+                        <div class="node node-evaluator" id="node-evaluator">
+                            <span class="node-icon">⚖️</span>
+                            <span class="node-title">EVALUATOR</span>
+                        </div>
+
+                        <div class="eval-decision-box">
+                            <div class="node node-optimizer" id="node-optimizer">
+                                <span class="node-icon">🛠️</span>
+                                <span class="node-title">OPTIMIZER</span>
+                                <span class="node-sub">Loop Refinement</span>
+                            </div>
+                            <div class="loop-arrow" title="Feedback Re-dispatch Loop">⤹ Re-run</div>
+                        </div>
+
+                        <div class="node node-end" id="node-END">END (PASSED)</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom Left: Telemetry Terminal Logs -->
+            <section class="panel terminal-panel">
+                <div class="panel-header">
+                    <h2>💻 Live Execution Telemetry</h2>
+                    <button class="btn-sm" onclick="clearTerminal()">Clear Console</button>
+                </div>
+                <div class="terminal-body" id="terminal-body">
+                    <div class="log-entry log-info">[System] Workflow Studio initialized. Ready for task execution.</div>
+                </div>
+            </section>
+
+            <!-- Bottom Right: Output & Synthesized Artifact Viewer -->
+            <section class="panel output-panel">
+                <div class="panel-header">
+                    <h2>📄 Output & Artifact Inspector</h2>
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="switchTab('tab-synthesis')">Final Synthesis</button>
+                        <button class="tab-btn" onclick="switchTab('tab-research')">Research</button>
+                        <button class="tab-btn" onclick="switchTab('tab-planner')">Planner</button>
+                        <button class="tab-btn" onclick="switchTab('tab-coder')">Coder</button>
+                        <button class="tab-btn" onclick="switchTab('tab-eval')">Evaluator</button>
+                    </div>
+                </div>
+
+                <div class="tab-content-container">
+                    <div class="tab-content active" id="tab-synthesis">
+                        <pre class="code-block" id="out-synthesis">Click 'Execute Graph' to generate the synthesized multi-agent report.</pre>
+                    </div>
+                    <div class="tab-content" id="tab-research">
+                        <pre class="code-block" id="out-research">No research output generated yet.</pre>
+                    </div>
+                    <div class="tab-content" id="tab-planner">
+                        <pre class="code-block" id="out-planner">No plan generated yet.</pre>
+                    </div>
+                    <div class="tab-content" id="tab-coder">
+                        <pre class="code-block" id="out-coder">No code generated yet.</pre>
+                    </div>
+                    <div class="tab-content" id="tab-eval">
+                        <div class="eval-card" id="out-eval">
+                            <p class="placeholder-text">Evaluation scorecard will appear after run completion.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
