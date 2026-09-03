@@ -16,6 +16,27 @@ def pick_last(left: str, right: str) -> str:
     return left if left is not None else ""
 
 
+def pick_last_int(left: int, right: int) -> int:
+    return right if right is not None else (left if left is not None else 0)
+
+
+def pick_last_bool(left: bool, right: bool) -> bool:
+    return right if right is not None else (left if left is not None else False)
+
+
+def pick_last_float(left: float, right: float) -> float:
+    return right if right is not None else (left if left is not None else 0.0)
+
+
+def keep_first_int(left: int, right: int) -> int:
+    if left is not None and left > 0:
+        return left
+    if right is not None and right > 0:
+        return right
+    return 2
+
+
+
 class AgentState(TypedDict):
     user_input: Annotated[str, keep_first]
     agent_response: Annotated[str, pick_last]
@@ -32,9 +53,17 @@ class AgentState(TypedDict):
     coder_draft: Annotated[str, pick_last]
     coder_review: Annotated[str, pick_last]
     coder_output: Annotated[str, pick_last]
+    # Evaluator & Optimizer state
+    evaluation_score: Annotated[float, pick_last_float]
+    evaluation_feedback: Annotated[str, pick_last]
+    is_good_enough: Annotated[bool, pick_last_bool]
+    iteration_count: Annotated[int, pick_last_int]
+    max_iterations: Annotated[int, keep_first_int]
+    optimization_directives: Annotated[str, pick_last]
     # Orchestrator & Messages state
     final_response: Annotated[str, pick_last]
     messages: Annotated[list, add_messages]
+
 
 
 
