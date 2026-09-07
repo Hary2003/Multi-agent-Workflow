@@ -147,22 +147,37 @@
 
                     <div class="connector-line">↓</div>
 
+                    <div class="connector-line">↓</div>
+
                     <div class="eval-loop-wrapper">
                         <div class="node node-evaluator" id="node-evaluator">
                             <span class="node-icon">⚖️</span>
                             <span class="node-title">EVALUATOR</span>
                         </div>
 
-                        <div class="eval-decision-box">
-                            <div class="node node-optimizer" id="node-optimizer">
-                                <span class="node-icon">🛠️</span>
-                                <span class="node-title">OPTIMIZER</span>
-                                <span class="node-sub">Loop Refinement</span>
+                        <div class="eval-branch-container">
+                            <!-- BAD Branch -> OPTIMIZER -> EVALUATOR -->
+                            <div class="branch-path branch-bad">
+                                <span class="path-badge badge-bad">BAD</span>
+                                <div class="node node-optimizer" id="node-optimizer">
+                                    <span class="node-icon">🛠️</span>
+                                    <span class="node-title">OPTIMIZER</span>
+                                </div>
+                                <div class="loop-arrow" title="Feedback Re-dispatch Loop">⤹ Re-eval</div>
                             </div>
-                            <div class="loop-arrow" title="Feedback Re-dispatch Loop">⤹ Re-run</div>
-                        </div>
 
-                        <div class="node node-end" id="node-END">END (PASSED)</div>
+                            <!-- GOOD Branch -> APPROVAL NODE -> INTERRUPT -> END -->
+                            <div class="branch-path branch-good">
+                                <span class="path-badge badge-good">GOOD</span>
+                                <div class="node node-approval" id="node-approval_node">
+                                    <span class="node-icon">🛡️</span>
+                                    <span class="node-title">APPROVAL NODE</span>
+                                    <span class="node-sub badge-interrupt">⏸ INTERRUPT</span>
+                                </div>
+                                <div class="connector-line">↓</div>
+                                <div class="node node-end" id="node-END">END (PASSED)</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -212,6 +227,45 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Human Approval Modal Backdrop -->
+    <div class="modal-backdrop hidden" id="approval-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon">🛡️</span>
+                    <div>
+                        <h3>Human Approval Required</h3>
+                        <p class="modal-sub">Workflow state halted at Approval Node (⏸ INTERRUPT)</p>
+                    </div>
+                </div>
+                <span class="badge badge-warning"><span class="pulse-dot-amber"></span> Awaiting Review</span>
+            </div>
+
+            <div class="modal-body">
+                <p>The Evaluator node assessed the synthesized output as <strong>GOOD</strong>. Please review the output summary below and issue your final approval or request revisions.</p>
+
+                <div class="approval-preview-box">
+                    <div class="preview-label">Synthesized Output Summary:</div>
+                    <pre class="preview-text" id="modal-output-preview">Synthesis content preview...</pre>
+                </div>
+
+                <div class="form-group" style="margin-top: 14px;">
+                    <label for="approval-feedback-input">Feedback / Revision Directives (Optional)</label>
+                    <textarea id="approval-feedback-input" placeholder="Enter comments or revision requests..." rows="3">Approved. High quality output meeting system specifications.</textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="submitApproval(false)">
+                    <span>❌ Reject Output</span>
+                </button>
+                <button class="btn btn-success" onclick="submitApproval(true)">
+                    <span>✅ Approve & Finalize</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>

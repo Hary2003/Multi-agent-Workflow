@@ -60,6 +60,10 @@ class AgentState(TypedDict):
     iteration_count: Annotated[int, pick_last_int]
     max_iterations: Annotated[int, keep_first_int]
     optimization_directives: Annotated[str, pick_last]
+    # Approval Node state
+    approval_status: Annotated[str, pick_last]
+    approval_feedback: Annotated[str, pick_last]
+    is_approved: Annotated[bool, pick_last_bool]
     # Orchestrator & Messages state
     final_response: Annotated[str, pick_last]
     messages: Annotated[list, add_messages]

@@ -5,17 +5,18 @@ from agents.supervisor import supervisor_node
 from agents.fan_in import fan_in_node
 from agents.evaluator import evaluator_node
 from agents.optimizer import optimizer_node
+from agents.approval import approval_node
 from subgraphs import research_subgraph, planner_subgraph, coder_subgraph
 
 
 def route_evaluator_decision(state: AgentState) -> str:
     """
     Conditional routing function for Evaluator node:
-    - If is_good_enough is True -> route to END
+    - If is_good_enough is True -> route to 'approval_node' (Human-in-the-Loop Interrupt)
     - If is_good_enough is False -> route to 'optimizer'
     """
     if state.get("is_good_enough", False):
-        return END
+        return "approval_node"
     return "optimizer"
 
 
@@ -24,9 +25,9 @@ def create_graph():
     Constructs and compiles the parallel multi-agent workflow graph:
     START -> SUPERVISOR -> (Fan-Out) -> [RESEARCH, PLANNER, CODER SUBGRAPHS] -> (Fan-In) -> FAN-IN -> EVALUATOR
                                                                                                         │
-                                                                                                  [Good enough?]
-                                                                                                  ├── YES → END
-                                                                                                  └── NO → OPTIMIZER -> SUPERVISOR
+                                                                                                   [Good enough?]
+                                                                                                   ├── YES → APPROVAL NODE (⏸ INTERRUPT) -> END
+                                                                                                   └── NO  → OPTIMIZER -> EVALUATOR
     """
     workflow = StateGraph(AgentState)
     
@@ -36,10 +37,11 @@ def create_graph():
     workflow.add_node("planner_subgraph", planner_subgraph)
     workflow.add_node("coder_subgraph", coder_subgraph)
     
-    # Add Fan-In, Evaluator, and Optimizer nodes
+    # Add Fan-In, Evaluator, Optimizer, and Approval nodes
     workflow.add_node("fan_in", fan_in_node)
     workflow.add_node("evaluator", evaluator_node)
     workflow.add_node("optimizer", optimizer_node)
+    workflow.add_node("approval_node", approval_node)
     
     # Execution starts at supervisor node
     workflow.add_edge(START, "supervisor")
@@ -57,23 +59,29 @@ def create_graph():
     # Fan-In aggregator feeds into Evaluator node
     workflow.add_edge("fan_in", "evaluator")
     
-    # Conditional Edge: Evaluator -> END (if good enough) or OPTIMIZER (if needs improvement)
+    # Conditional Edge: Evaluator -> APPROVAL NODE (if good enough) or OPTIMIZER (if needs improvement)
     workflow.add_conditional_edges(
         "evaluator",
         route_evaluator_decision,
         {
-            END: END,
+            "approval_node": "approval_node",
             "optimizer": "optimizer"
         }
     )
     
-    # Optimizer routes back to Supervisor for Re-run / Improve pass
-    workflow.add_edge("optimizer", "supervisor")
+    # Optimizer routes back to Evaluator for re-evaluation
+    workflow.add_edge("optimizer", "evaluator")
+
+    # Approval Node completes execution to END
+    workflow.add_edge("approval_node", END)
     
-    # Enable short-term memory via in-memory checkpointer
+    # Enable short-term memory via in-memory checkpointer & Human Interrupt before Approval Node
     checkpointer = MemorySaver()
     
-    return workflow.compile(checkpointer=checkpointer)
+    return workflow.compile(
+        checkpointer=checkpointer,
+        interrupt_before=["approval_node"]
+    )
 
 
 # Export compiled graph application instance with memory checkpointer
