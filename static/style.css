@@ -583,6 +583,88 @@ textarea:focus, input[type="text"]:focus {
     gap: 6px;
 }
 
+.node-interrupt {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+    color: #fca5a5;
+}
+
+.approval-flow-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.human-decision-box {
+    background: rgba(11, 16, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 16px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+
+.decision-header {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.decision-branches {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+}
+
+.branch-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.badge-approve {
+    background: rgba(52, 211, 153, 0.2);
+    color: var(--accent-emerald);
+    border: 1px solid rgba(52, 211, 153, 0.4);
+}
+
+.badge-reject {
+    background: rgba(244, 63, 94, 0.2);
+    color: var(--accent-rose);
+    border: 1px solid rgba(244, 63, 94, 0.4);
+}
+
+.node-execute {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+}
+
+.node-end-reject {
+    border-radius: 30px;
+    padding: 8px 22px;
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    font-weight: 800;
+    background: rgba(244, 63, 94, 0.15);
+    color: var(--accent-rose);
+    border-color: var(--accent-rose);
+    box-shadow: 0 0 15px rgba(244, 63, 94, 0.25);
+}
+
 .badge-interrupt {
     font-size: 9px;
     background: rgba(251, 191, 36, 0.3);

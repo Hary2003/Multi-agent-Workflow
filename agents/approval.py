@@ -19,18 +19,18 @@ def approval_node(state: AgentState) -> dict:
         return {
             "approval_status": "approved",
             "is_approved": True,
-            "agent_response": f"Approved output. {final_response}",
-            "next_agent": "FINISH",
+            "agent_response": f"Approved output. Proceeding to execution.",
+            "next_agent": "execute",
             "messages": [AIMessage(content=log_msg)]
         }
     elif approval_status == "rejected":
-        log_msg = f"[Approval Node] Task REJECTED by human reviewer. Feedback: '{feedback}'"
+        log_msg = f"[Approval Node] Task REJECTED by human reviewer. Terminating workflow. Feedback: '{feedback or 'None'}'"
         print(f"  {log_msg}")
         return {
             "approval_status": "rejected",
             "is_approved": False,
-            "agent_response": f"Rejected by user: {feedback}",
-            "next_agent": "optimizer",
+            "agent_response": f"Rejected by user: {feedback or 'No reason provided.'}",
+            "next_agent": "END",
             "messages": [AIMessage(content=log_msg)]
         }
     else:
@@ -44,3 +44,4 @@ def approval_node(state: AgentState) -> dict:
             "next_agent": "approval_node",
             "messages": [AIMessage(content=log_msg)]
         }
+

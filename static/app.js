@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.is_interrupted) {
                 logToTerminal(`[Approval Node] ⏸ INTERRUPT: Graph execution paused at Approval Node. Awaiting human decision.`, 'log-warn');
                 highlightNode('approval_node');
+                highlightNode('interrupt');
                 showApprovalModal(data.final_state);
             } else {
                 logToTerminal(`[System] Multi-agent execution completed successfully. Thread '${threadId}' state saved.`, 'log-success');
@@ -69,7 +70,7 @@ async function submitApproval(approved) {
     const threadId = threadInput.value.trim() || activeThreadId || 'session-ui-101';
 
     hideApprovalModal();
-    logToTerminal(`[Client] Submitting human approval decision: ${approved ? 'APPROVED' : 'REJECTED'} (Feedback: "${feedback}")`, 'log-info');
+    logToTerminal(`[Client] Submitting human decision: ${approved ? 'APPROVE' : 'REJECT'} (Feedback: "${feedback}")`, 'log-info');
 
     try {
         const response = await fetch('/api/approve', {
@@ -97,11 +98,12 @@ async function submitApproval(approved) {
         displayResults(data.final_state, false);
 
         if (approved) {
-            logToTerminal(`[System] Task APPROVED by user. Graph reached END node.`, 'log-success');
+            logToTerminal(`[System] Task APPROVED by user. Executed payload and reached END node.`, 'log-success');
+            highlightNode('execute');
             highlightNode('END');
         } else {
-            logToTerminal(`[System] Task REJECTED by user. Re-routed to Optimizer for loop refinement.`, 'log-warn');
-            highlightNode('optimizer');
+            logToTerminal(`[System] Task REJECTED by user. Workflow terminated at END node.`, 'log-warn');
+            highlightNode('END-reject');
         }
     } catch (err) {
         logToTerminal(`[Error] ${err.message}`, 'log-warn');

@@ -53,14 +53,22 @@ def run_workflow(request: WorkflowRequest):
     try:
         # Stream step-by-step graph execution
         for event in graph_app.stream({"user_input": request.user_input}, config=config):
-            for node_name, node_state in event.items():
-                trajectory.append({
-                    "node": node_name,
-                    "state_update": {
-                        k: v for k, v in node_state.items() 
-                        if k != "messages" # Messages format handled separately
-                    }
-                })
+            if isinstance(event, dict):
+                items = event.items()
+            elif isinstance(event, tuple) and len(event) == 2 and isinstance(event[0], str):
+                items = [(event[0], event[1])]
+            else:
+                items = []
+
+            for node_name, node_state in items:
+                if isinstance(node_state, dict):
+                    trajectory.append({
+                        "node": node_name,
+                        "state_update": {
+                            k: v for k, v in node_state.items() 
+                            if k != "messages" # Messages format handled separately
+                        }
+                    })
         
         # Get state snapshot to check for interrupt
         state_snapshot = graph_app.get_state(config)
@@ -125,14 +133,22 @@ def approve_workflow(request: ApprovalRequest):
         
         # Resume graph execution from interrupt checkpoint
         for event in graph_app.stream(None, config=config):
-            for node_name, node_state in event.items():
-                trajectory.append({
-                    "node": node_name,
-                    "state_update": {
-                        k: v for k, v in node_state.items() 
-                        if k != "messages"
-                    }
-                })
+            if isinstance(event, dict):
+                items = event.items()
+            elif isinstance(event, tuple) and len(event) == 2 and isinstance(event[0], str):
+                items = [(event[0], event[1])]
+            else:
+                items = []
+
+            for node_name, node_state in items:
+                if isinstance(node_state, dict):
+                    trajectory.append({
+                        "node": node_name,
+                        "state_update": {
+                            k: v for k, v in node_state.items() 
+                            if k != "messages"
+                        }
+                    })
         
         snapshot = graph_app.get_state(config)
         final_state = snapshot.values

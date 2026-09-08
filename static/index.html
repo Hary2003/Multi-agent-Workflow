@@ -153,27 +153,45 @@
                             <span class="node-title">EVALUATOR</span>
                         </div>
 
-                        <div class="eval-branch-container">
-                            <!-- BAD Branch -> OPTIMIZER -> EVALUATOR -->
-                            <div class="branch-path branch-bad">
-                                <span class="path-badge badge-bad">BAD</span>
-                                <div class="node node-optimizer" id="node-optimizer">
-                                    <span class="node-icon">🛠️</span>
-                                    <span class="node-title">OPTIMIZER</span>
-                                </div>
-                                <div class="loop-arrow" title="Feedback Re-dispatch Loop">⤹ Re-eval</div>
+                        <div class="connector-line">↓</div>
+
+                        <div class="approval-flow-wrapper">
+                            <div class="node node-approval" id="node-approval_node">
+                                <span class="node-icon">🛡️</span>
+                                <span class="node-title">APPROVAL NODE</span>
                             </div>
 
-                            <!-- GOOD Branch -> APPROVAL NODE -> INTERRUPT -> END -->
-                            <div class="branch-path branch-good">
-                                <span class="path-badge badge-good">GOOD</span>
-                                <div class="node node-approval" id="node-approval_node">
-                                    <span class="node-icon">🛡️</span>
-                                    <span class="node-title">APPROVAL NODE</span>
-                                    <span class="node-sub badge-interrupt">⏸ INTERRUPT</span>
+                            <div class="connector-line">↓</div>
+
+                            <div class="node node-interrupt" id="node-interrupt">
+                                <span class="node-icon">⏸️</span>
+                                <span class="node-title">INTERRUPT</span>
+                            </div>
+
+                            <div class="connector-line">↓</div>
+
+                            <div class="human-decision-box">
+                                <div class="decision-header">👤 HUMAN REVIEW</div>
+                                <div class="decision-branches">
+                                    <!-- APPROVE Branch -->
+                                    <div class="branch-col branch-approve">
+                                        <span class="path-badge badge-approve">APPROVE</span>
+                                        <div class="connector-line">↓</div>
+                                        <div class="node node-execute" id="node-execute">
+                                            <span class="node-icon">⚡</span>
+                                            <span class="node-title">EXECUTE</span>
+                                        </div>
+                                        <div class="connector-line">↓</div>
+                                        <div class="node node-end" id="node-END">END</div>
+                                    </div>
+
+                                    <!-- REJECT Branch -->
+                                    <div class="branch-col branch-reject">
+                                        <span class="path-badge badge-reject">REJECT</span>
+                                        <div class="connector-line">↓</div>
+                                        <div class="node node-end-reject" id="node-END-reject">END</div>
+                                    </div>
                                 </div>
-                                <div class="connector-line">↓</div>
-                                <div class="node node-end" id="node-END">END (PASSED)</div>
                             </div>
                         </div>
                     </div>
