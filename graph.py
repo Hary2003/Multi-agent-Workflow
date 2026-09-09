@@ -108,11 +108,12 @@ def create_graph():
     return workflow.compile(
         checkpointer=checkpointer,
         interrupt_before=["approval_node"]
-    )
+    ), checkpointer
 
 
-# Export compiled graph application instance with memory checkpointer
-app = create_graph()
+# Export compiled graph application instance with checkpointer
+app, checkpointer = create_graph()
+
 
 
 

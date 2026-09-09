@@ -39,7 +39,7 @@
                 <form id="workflow-form">
                     <div class="form-group">
                         <label for="prompt-input">Task Prompt</label>
-                        <textarea id="prompt-input" placeholder="Enter your task description..." rows="4">Design and implement a RAG-powered chatbot in Python</textarea>
+                        <textarea id="prompt-input" placeholder="Enter your task description..." rows="3">Design and implement a RAG-powered chatbot in Python</textarea>
                     </div>
 
                     <div class="form-group row-group">
@@ -47,7 +47,20 @@
                             <label for="thread-input">Session Thread ID</label>
                             <input type="text" id="thread-input" value="session-ui-101" placeholder="thread-id">
                         </div>
-                        <button type="submit" id="run-btn" class="btn btn-primary">
+                        <div class="flex-1">
+                            <label for="session-select">Past Threads</label>
+                            <select id="session-select" class="session-select" onchange="switchSessionThread(this.value)">
+                                <option value="">-- Saved Sessions --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group row-group" style="margin-top: 10px;">
+                        <label class="toggle-container">
+                            <input type="checkbox" id="stream-toggle" checked>
+                            <span class="toggle-label">⚡ Live SSE Event Stream</span>
+                        </label>
+                        <button type="submit" id="run-btn" class="btn btn-primary flex-1">
                             <span>Execute Graph</span>
                             <span class="spinner hidden" id="btn-spinner"></span>
                         </button>
@@ -62,6 +75,7 @@
                         <button class="pill-btn" onclick="loadPreset('Create an automated data ETL pipeline for real-time analytics')">📊 ETL Pipeline</button>
                     </div>
                 </div>
+
 
                 <!-- Execution Metrics Card -->
                 <div class="metrics-card card-glass hidden" id="metrics-card">
@@ -282,8 +296,30 @@
                 </button>
             </div>
         </div>
+    <!-- Node Detail Modal Backdrop -->
+    <div class="modal-backdrop hidden" id="node-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon">🔎</span>
+                    <div>
+                        <h3 id="node-modal-name">Node Telemetry Inspector</h3>
+                        <p class="modal-sub">Live Node State Snapshot</p>
+                    </div>
+                </div>
+                <button class="btn-sm" onclick="hideNodeModal()">Close ✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="approval-preview-box">
+                    <div class="preview-label">State Payload:</div>
+                    <pre class="preview-text" id="node-modal-content">Node details payload...</pre>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>
 </body>
 </html>
+

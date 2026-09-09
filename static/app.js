@@ -1,4 +1,5 @@
 let activeThreadId = 'session-ui-101';
+let lastExecutedTrajectory = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('workflow-form');
@@ -7,11 +8,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const runBtn = document.getElementById('run-btn');
     const btnSpinner = document.getElementById('btn-spinner');
 
+    loadPastSessions();
+
+    // Attach click listeners on visual architecture graph nodes
+    document.querySelectorAll('.node, .subgraph-box').forEach(elem => {
+        elem.style.cursor = 'pointer';
+        elem.addEventListener('click', () => {
+            const nodeId = elem.id.replace('node-', '');
+            inspectNode(nodeId);
+        });
+    });
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const userInput = promptInput.value.trim();
         const threadId = threadInput.value.trim() || 'session-ui-101';
         activeThreadId = threadId;
+        const useStreaming = document.getElementById('stream-toggle').checked;
 
         if (!userInput) return;
 
@@ -20,47 +33,152 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSpinner.classList.remove('hidden');
         resetNodeHighlights();
         hideApprovalModal();
+        lastExecutedTrajectory = [];
 
-        logToTerminal(`[Client] Initiating task execution on thread '${threadId}'...`, 'log-info');
+        logToTerminal(`[Client] Initiating task execution on thread '${threadId}' (Mode: ${useStreaming ? 'SSE Stream' : 'Batch REST'})...`, 'log-info');
         logToTerminal(`[Prompt] "${userInput}"`, 'log-entry');
 
-        try {
-            const response = await fetch('/api/run', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_input: userInput, thread_id: threadId })
-            });
-
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.detail || 'Workflow execution failed');
-            }
-
-            const data = await response.json();
-            
-            // Replay trajectory nodes with visual step animations
-            await replayTrajectory(data.trajectory);
-
-            // Display current results
-            displayResults(data.final_state, data.is_interrupted);
-
-            if (data.is_interrupted) {
-                logToTerminal(`[Approval Node] ⏸ INTERRUPT: Graph execution paused at Approval Node. Awaiting human decision.`, 'log-warn');
-                highlightNode('approval_node');
-                highlightNode('interrupt');
-                showApprovalModal(data.final_state);
-            } else {
-                logToTerminal(`[System] Multi-agent execution completed successfully. Thread '${threadId}' state saved.`, 'log-success');
-                highlightNode('END');
-            }
-        } catch (err) {
-            logToTerminal(`[Error] ${err.message}`, 'log-warn');
-        } finally {
-            runBtn.disabled = false;
-            btnSpinner.classList.add('hidden');
+        if (useStreaming) {
+            runStreamingWorkflow(userInput, threadId, runBtn, btnSpinner);
+        } else {
+            runBatchWorkflow(userInput, threadId, runBtn, btnSpinner);
         }
     });
 });
+
+// Load Past Session Threads
+async function loadPastSessions() {
+    try {
+        const res = await fetch('/api/threads');
+        if (!res.ok) return;
+        const data = await res.json();
+        const select = document.getElementById('session-select');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">-- Saved Sessions --</option>';
+        (data.threads || []).forEach(sess => {
+            const opt = document.createElement('option');
+            opt.value = sess.thread_id;
+            opt.innerText = `${sess.thread_id} (${sess.updated_at || 'Saved'})`;
+            select.appendChild(opt);
+        });
+    } catch (e) {
+        console.warn('Could not fetch past sessions:', e);
+    }
+}
+
+// Switch Active Thread Session
+async function switchSessionThread(threadId) {
+    if (!threadId) return;
+    document.getElementById('thread-input').value = threadId;
+    activeThreadId = threadId;
+
+    logToTerminal(`[Session Manager] Switched context to thread '${threadId}'. Fetching state snapshot...`, 'log-info');
+
+    try {
+        const res = await fetch(`/api/state/${threadId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.exists && data.state) {
+            if (data.state.user_input) {
+                document.getElementById('prompt-input').value = data.state.user_input;
+            }
+            displayResults(data.state, data.is_interrupted);
+            if (data.is_interrupted) {
+                highlightNode('approval_node');
+                highlightNode('interrupt');
+                showApprovalModal(data.state);
+            }
+            logToTerminal(`[Session Manager] State snapshot loaded for '${threadId}'.`, 'log-success');
+        }
+    } catch (e) {
+        logToTerminal(`[Error] Failed to load thread '${threadId}': ${e.message}`, 'log-warn');
+    }
+}
+
+// Stream Workflow Execution via SSE
+function runStreamingWorkflow(userInput, threadId, runBtn, btnSpinner) {
+    const streamUrl = `/api/stream?user_input=${encodeURIComponent(userInput)}&thread_id=${encodeURIComponent(threadId)}`;
+    const eventSource = new EventSource(streamUrl);
+
+    eventSource.onmessage = (e) => {
+        try {
+            const data = JSON.parse(e.data);
+            if (data.type === 'step') {
+                logToTerminal(`⚡ Live Stream Step: [${data.node}]`, 'log-info');
+                highlightNode(data.node);
+                lastExecutedTrajectory.push(data);
+            } else if (data.type === 'complete') {
+                eventSource.close();
+                displayResults(data.final_state, data.is_interrupted);
+                loadPastSessions();
+
+                if (data.is_interrupted) {
+                    logToTerminal(`[Approval Node] ⏸ INTERRUPT: Execution paused at Approval Node. Awaiting decision.`, 'log-warn');
+                    highlightNode('approval_node');
+                    highlightNode('interrupt');
+                    showApprovalModal(data.final_state);
+                } else {
+                    logToTerminal(`[System] Multi-agent SSE streaming execution complete for thread '${threadId}'.`, 'log-success');
+                    highlightNode('END');
+                }
+                runBtn.disabled = false;
+                btnSpinner.classList.add('hidden');
+            } else if (data.type === 'error') {
+                eventSource.close();
+                logToTerminal(`[Error] ${data.error}`, 'log-warn');
+                runBtn.disabled = false;
+                btnSpinner.classList.add('hidden');
+            }
+        } catch (err) {
+            console.error('SSE JSON parse error:', err);
+        }
+    };
+
+    eventSource.onerror = (err) => {
+        eventSource.close();
+        logToTerminal(`[Error] SSE Connection interrupted. Falling back to batch mode.`, 'log-warn');
+        runBtn.disabled = false;
+        btnSpinner.classList.add('hidden');
+    };
+}
+
+// Batch REST Execution Fallback
+async function runBatchWorkflow(userInput, threadId, runBtn, btnSpinner) {
+    try {
+        const response = await fetch('/api/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_input: userInput, thread_id: threadId })
+        });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.detail || 'Workflow execution failed');
+        }
+
+        const data = await response.json();
+        await replayTrajectory(data.trajectory);
+        displayResults(data.final_state, data.is_interrupted);
+        loadPastSessions();
+
+        if (data.is_interrupted) {
+            logToTerminal(`[Approval Node] ⏸ INTERRUPT: Graph execution paused at Approval Node.`, 'log-warn');
+            highlightNode('approval_node');
+            highlightNode('interrupt');
+            showApprovalModal(data.final_state);
+        } else {
+            logToTerminal(`[System] Execution completed successfully. Thread '${threadId}' saved.`, 'log-success');
+            highlightNode('END');
+        }
+    } catch (err) {
+        logToTerminal(`[Error] ${err.message}`, 'log-warn');
+    } finally {
+        runBtn.disabled = false;
+        btnSpinner.classList.add('hidden');
+    }
+}
+
 
 // Submit Human Approval (Approve / Reject)
 async function submitApproval(approved) {
@@ -229,3 +347,27 @@ function switchTab(tabId) {
         contentElem.classList.add('active');
     }
 }
+
+// Node Detail Inspector Modal
+function inspectNode(nodeId) {
+    const modal = document.getElementById('node-modal');
+    const title = document.getElementById('node-modal-name');
+    const content = document.getElementById('node-modal-content');
+
+    if (!modal || !title || !content) return;
+
+    title.innerText = `Node Telemetry: [${nodeId}]`;
+    const stepMatch = lastExecutedTrajectory.find(s => s.node === nodeId);
+    if (stepMatch) {
+        content.innerText = JSON.stringify(stepMatch.state_update, null, 2);
+    } else {
+        content.innerText = `[Node info]: Execution node '${nodeId}' registered in Graph Architecture.\nThread: '${activeThreadId}'`;
+    }
+    modal.classList.remove('hidden');
+}
+
+function hideNodeModal() {
+    const modal = document.getElementById('node-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
